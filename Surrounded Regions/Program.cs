@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Surrounded_Regions
 {
@@ -7,79 +6,63 @@ namespace Surrounded_Regions
   {
     static void Main(string[] args)
     {
-      Console.WriteLine("Hello World!");
+      var board = new char[][] { new char[] { 'X', 'X', 'X', 'X' }, new char[] { 'X', '0', '0', 'X' }, 
+        new char[] { 'X', 'X', '0', 'X' }, new char[] { 'X', '0', 'X', 'X' } };
+      Program p = new Program();
+      p.Solve(board);
+      foreach (var b in board)
+        Console.WriteLine(string.Join(",", b));
     }
 
     public void Solve(char[][] board)
     {
-      if (board == null || board.Length == 1) return;
-      // Queue has been used here to insert the positions where we found '0'.
-      Queue<(int, int)> q = new Queue<(int, int)>();
-      // check for the 0's in left and right side
-
-      for (int i = 0; i < board.Length; ++i)
+      int ROW = board.Length;
+      int COLUMN = board[0].Length;
+      // Step 1 - Find all the cells which are on the boarder of the board and mark them 0 => T
+      // Do DFS for the border cells and also mark the connected cells to border cells 0 => T
+      for (int i = 0; i < ROW; i++)
       {
-        if (board[i][0] == '0') q.Enqueue((i, 0));
-        int lastColumn = board[i].Length - 1;
-        if (board[i][lastColumn] == '0') q.Enqueue((i, lastColumn));
-      }
-
-      // check for the 0's in top and bottom side
-      int lastRow = board.Length - 1;
-      for (int i = 0; i < board[0].Length; ++i)
-      {
-        if (board[0][i] == '0') q.Enqueue((0, i));
-        if (board[lastRow][i] == '0') q.Enqueue((lastRow, i));
-      }
-
-      // Visited will have position of the 0's in the board
-      var visited = new bool[board.Length][];
-      for (int i = 0; i < board.Length; ++i)
-      {
-        visited[i] = new bool[board[i].Length];
-      }
-
-      var directions = new List<List<int>>();
-      directions.Add(new List<int>() { 0, 1 }); // right 
-      directions.Add(new List<int>() { 0, -1 }); // left
-      directions.Add(new List<int>() { 1, 0 }); // down
-      directions.Add(new List<int>() { -1, 0 }); // up
-
-      while (q.Count > 0)
-      {
-        // row and column where 0 we have found.
-        var (row, column) = q.Dequeue();
-        // mark position as 0 value cell.
-        visited[row][column] = true;
-        // Now check for each 0 value cell any neighbour is also 0
-        foreach (var direction in directions)
+        for (int j = 0; j < COLUMN; j++)
         {
-          int newRow = row + direction[0];
-          int newColumn = row + direction[1];
-          if (IsValid(board, newRow, newColumn) && !visited[newRow][newColumn] && board[newRow][newColumn] == '0')
+          if (board[i][j] == '0' && (i == 0 || i == ROW - 1 || j == 0 || j == COLUMN - 1))
           {
-            // Push the neighbour 0 value cell position
-            q.Enqueue((newRow, newColumn));
+            DFS(i, j, board);
           }
         }
       }
-
-      for (int i = 0; i < board.Length; ++i)
+      // Step 2 - two for loops mark all the cells 0 => X
+      for (int i = 0; i < ROW; i++)
       {
-        for (int j = 0; j < board[i].Length; ++j)
+        for (int j = 0; j < COLUMN; j++)
         {
-          // visited now has all the 0's cell position which are not surrounded by X in all four directions
-          if (board[i][j] == '0' && !visited[i][j])
-          {
+          if (board[i][j] == '0')
             board[i][j] = 'X';
-          }
+        }
+      }
+      // Step 3 - Finally change the T => 0
+      for (int i = 0; i < ROW; i++)
+      {
+        for (int j = 0; j < COLUMN; j++)
+        {
+          if (board[i][j] == 'T')
+            board[i][j] = '0';
         }
       }
     }
 
-    private bool IsValid(char[][] board, int i, int j)
+    private void DFS(int r, int c, char[][] board)
     {
-      return i >= 0 && i < board.Length && j >= 0 && j < board[i].Length;
+      if (IsInValid(board, r, c) || board[r][c] != '0') return;
+      board[r][c] = 'T';
+      DFS(r + 1, c, board);
+      DFS(r - 1, c, board);
+      DFS(r, c + 1, board);
+      DFS(r, c - 1, board);
+    }
+
+    private bool IsInValid(char[][] board, int row, int col)
+    {
+      return row < 0 || row >= board.Length || col < 0 || col >= board[row].Length;
     }
   }
 }
